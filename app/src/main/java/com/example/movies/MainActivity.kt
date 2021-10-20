@@ -3,13 +3,10 @@ package com.example.movies
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.inputmethod.InputMethodManager
-import android.widget.SearchView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.movies.databinding.ActivityMainBinding
-import com.example.movies.features.movies.data.models.data.ApiMovieResponse
 import com.example.movies.features.movies.data.models.data.MoviesResponse
 import com.example.movies.features.movies.data.services.APIService
 import com.example.movies.features.movies.view.adapters.MoviesAdapter
@@ -21,7 +18,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.*
 import kotlin.collections.ArrayList
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), OnClickListener {
 
     private lateinit var mBinding: ActivityMainBinding
 
@@ -30,7 +27,8 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var mRecyclerView: RecyclerView
 
-    private var mAdapter: MoviesAdapter = MoviesAdapter(allMovies)
+    //private var mAdapter: MoviesAdapter = MoviesAdapter(allMovies)
+    private lateinit var mAdapter:MoviesAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,8 +36,21 @@ class MainActivity : AppCompatActivity() {
         setContentView(mBinding.root)
 
         getMovies()
+
+        mBinding.rvMovies.setOnClickListener { launchDetailsFragment() }
         initRecyclerView()
     }
+
+    private fun launchDetailsFragment(args:Bundle?=null) {
+        val fragment= MovieDetailsFragment()
+        if(args!=null) fragment.arguments=args
+        val fragmentManager= supportFragmentManager
+        val fragmentTransaction= fragmentManager.beginTransaction()
+
+        fragmentTransaction.add(R.id.containerMain,fragment)
+        fragmentTransaction.commit()
+    }
+
 
     private fun getRetrofit(): Retrofit{
         return Retrofit.Builder()
@@ -55,8 +66,8 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 if (call.isSuccessful) {
                     //show recyclerview
-                    allMovies?.clear()
-                    allMovies?.addAll(moviesRes!!.results)
+                    allMovies.clear()
+                    allMovies.addAll(moviesRes!!.results)
                     Log.i("response", allMovies[0].toString())
                     mAdapter.notifyDataSetChanged()
                     Toast.makeText(this@MainActivity, "Funciono", Toast.LENGTH_SHORT).show()
@@ -76,9 +87,35 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun initRecyclerView(){
-        mAdapter = MoviesAdapter(allMovies)
+        mAdapter = MoviesAdapter(allMovies,this)
         mBinding.rvMovies.layoutManager = LinearLayoutManager(this)
         mBinding.rvMovies.adapter = mAdapter
+    }
+
+
+    /*
+    * OnClickListener
+    * */
+    override fun onClick(movie: MoviesResponse) {
+       val args= Bundle()
+
+        args.putString(getString(R.string.overview),movie.overview)
+
+        args.putString(getString(R.string.arg_title),movie.title)
+        args.putString(getString(R.string.arg_releaseDate),movie.release_date)
+        args.putLong(getString(R.string.arg_id),movie.id)
+        args.putBoolean(getString(R.string.adult),movie.adult)
+        args.putString(getString(R.string.backdropPath),movie.backdrop_path)
+        args.putInt(getString(R.string.voteCount),movie.vote_count)
+        args.putString(getString(R.string.originalLanguage),movie.original_language)
+        args.putString(getString(R.string.posterPath),movie.poster_path)
+        args.putBoolean(getString(R.string.video),movie.video)
+        args.putFloat(getString(R.string.voteAverage),movie.vote_average)
+        args.putFloat(getString(R.string.popularity),movie.popularity)
+        args.putString(getString(R.string.mediaType),movie.media_type)
+
+
+        launchDetailsFragment(args)
     }
 //
 //    fun setUpRecyclerView(){
