@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity(), OnClickListener {
     }
 
 
-    private fun getRetrofit(): Retrofit{
+     fun getRetrofit(): Retrofit{
         return Retrofit.Builder()
             .baseUrl("https://api.themoviedb.org/3/")
             .addConverterFactory(GsonConverterFactory.create())
